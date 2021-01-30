@@ -1,0 +1,11 @@
+Welcome to Rockstar!
+
+Menus
+This game lets you take on the role of a lead singer in any song you want (as long as there is a YouTube video for it).  Each YouTube video will be downloaded and converted into notes for you to hit while the song plays.
+
+Before playing, you need to add songs to your music library.  To do this, click on the "Download Song" button.  This will bring you to a screen where you can put in a YouTube URL to download.  Simple type in the URL and click Download.
+
+To play a song that you've downloaded, click on the "Play" button from the main screen.  This will bring you to a list of songs that you have downloaded.  Choose a song that you want to play and click "Play"
+
+Playing a Song
+The goal is to press the corresponding keys when the note crosses the bar at the bottom of the screen.  You get points by hitting correct notes.  You lose points by missing notes or hitting incorrect notes.
