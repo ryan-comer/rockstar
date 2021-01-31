@@ -2,15 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
 
     public SongNotesController songNotesController;
     public GameObject videoTarget;
+    public FrameManager frameManager;
+    public UnityEngine.UI.Slider volumeSlider;
 
     private RenderTexture videoRenderTexture;
     private VideoPlayer videoPlayer;
+
+    private bool isPaused = false;
 
     // Start is called before the first frame update
     void Start()
@@ -19,6 +24,7 @@ public class GameController : MonoBehaviour
         videoPlayer = videoTarget.GetComponent<VideoPlayer>();
 
         initializeSong();
+        volumeSlider.value = 0.2f;
 
         videoPlayer.Play();
         songNotesController.StartSong();
@@ -27,17 +33,53 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.N))
+        checkInput();
+    }
+
+    private void checkInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (songNotesController.IsRandomNotesActive)
+            togglePause();
+        }
+    }
+
+    public void ToMainMenu()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    public void UpdateVolume(float newVolume)
+    {
+        songNotesController.UpdateVolume(newVolume);
+    }
+
+    private void togglePause()
+    {
+        if (isPaused)
+        {
+            if (frameManager.IsAnimating)
             {
-                songNotesController.StopRandomNotes();
+                return;
             }
-            else
+
+            songNotesController.ResumeSong();
+            videoPlayer.Play();
+            frameManager.HideActiveFrame();
+            isPaused = false;
+        }
+        else
+        {
+            if (frameManager.IsAnimating)
             {
-                songNotesController.StartRandomNotes();
+                return;
             }
-        } 
+
+            videoPlayer.Pause();
+            songNotesController.PauseSong();
+            frameManager.ShowFrame(0);
+            isPaused = true;
+        }
     }
 
     private void initializeSong()

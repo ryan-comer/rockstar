@@ -10,9 +10,18 @@ public class FrameManager : MonoBehaviour
     public int startingFrame;   // Frame to start with
     public float sizeChangeRate;    // The rate of change for the size
     public float sizeChangeOffset = 0.01f;
+    public bool shouldShowStartingFrame = true;
 
-    private int activeFrameNumber;
+    private int activeFrameNumber = -1;
     private bool isAnimating;
+
+    public bool IsAnimating
+    {
+        get
+        {
+            return isAnimating;
+        }
+    }
 
     void Awake()
     {
@@ -23,7 +32,11 @@ public class FrameManager : MonoBehaviour
     void Start()
     {
         hideAllFrames();
-        showStartingFrame();
+
+        if (shouldShowStartingFrame)
+        {
+            showStartingFrame();
+        }
     }
 
     // Update is called once per frame
@@ -46,12 +59,31 @@ public class FrameManager : MonoBehaviour
         }
 
         // Hide the current frame
-        StartCoroutine(sizingCoroutine(frames[activeFrameNumber], frames[activeFrameNumber].localScale, 0));
+        if(activeFrameNumber != -1)
+        {
+            StartCoroutine(sizingCoroutine(frames[activeFrameNumber], frames[activeFrameNumber].localScale, 0));
+        }
 
         // Show the next frame
         StartCoroutine(sizingCoroutine(frames[frameNumber], frames[frameNumber].localScale, 1));
 
         activeFrameNumber = frameNumber;
+
+        return;
+    }
+
+    public void HideActiveFrame()
+    {
+
+        if (isAnimating)
+        {
+            return;
+        }
+
+        // Hide the current frame
+        StartCoroutine(sizingCoroutine(frames[activeFrameNumber], frames[activeFrameNumber].localScale, 0));
+        activeFrameNumber = -1;
+        return;
     }
 
     // Coroutine to make the frames bigger/smaller

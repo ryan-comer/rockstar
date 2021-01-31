@@ -72,3 +72,6 @@ crashlytics-build.properties
 
 pretrained_models/
 pretrained_models.meta
+Assets/log.txt
+Assets/log.txt.meta
+Assets/songs/

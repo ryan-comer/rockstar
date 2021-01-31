@@ -37,6 +37,14 @@ public class SongController : MonoBehaviour
 
     private bool downloadingSong;
 
+    private System.Diagnostics.Process downloadProcess;
+    private System.Diagnostics.Process extractAudioProcess;
+    private System.Diagnostics.Process spleeterProcess;
+    private System.Diagnostics.Process noteGenerationProcess;
+
+    private string lastCmdMessage;
+    private List<string> runErrorMessages = new List<string>();
+
     private void Awake()
     {
         Instance = this;
@@ -103,7 +111,7 @@ public class SongController : MonoBehaviour
 
     public void UpdateSelectedSongOption(SongOption newOption)
     {
-        if (selectedSongOption != null)
+        if (selectedSongOption != null && selectedSongOption != newOption)
         {
             selectedSongOption.UnSelectOption();
         }
@@ -139,6 +147,8 @@ public class SongController : MonoBehaviour
             return;
         }
 
+        runErrorMessages.Clear();
+
         string youtubeUrl = urlInput.text;
         System.Uri uri = new System.Uri(youtubeUrl);
         string videoId = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("v");
@@ -161,11 +171,10 @@ public class SongController : MonoBehaviour
             CreateNoWindow = true,
             Arguments = cmdline,
             FileName = "cmd",
-            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false
         };
-        System.Diagnostics.Process downloadProcess = System.Diagnostics.Process.Start(startInfo);
-        downloadProcess.EnableRaisingEvents = true;
+        downloadProcess = new System.Diagnostics.Process { StartInfo = startInfo, EnableRaisingEvents = true };
         downloadProcess.Exited += (sender, e) =>
         {
             actions.Enqueue(() =>
@@ -183,6 +192,16 @@ public class SongController : MonoBehaviour
                 extractAudio(songPath);
             });
         };
+        downloadProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                lastCmdMessage = e.Data;
+                runErrorMessages.Add(e.Data);
+            }
+        };
+        downloadProcess.Start();
+        downloadProcess.BeginErrorReadLine();
     }
 
 
@@ -197,16 +216,15 @@ public class SongController : MonoBehaviour
             CreateNoWindow = true,
             Arguments = cmdline,
             FileName = "cmd",
-            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false
         };
-        System.Diagnostics.Process downloadProcess = System.Diagnostics.Process.Start(startInfo);
-        downloadProcess.EnableRaisingEvents = true;
-        downloadProcess.Exited += (sender, e) =>
+        extractAudioProcess = new System.Diagnostics.Process { StartInfo = startInfo, EnableRaisingEvents = true };
+        extractAudioProcess.Exited += (sender, e) =>
         {
             actions.Enqueue(() =>
             {
-                if(downloadProcess.ExitCode != 0)
+                if(extractAudioProcess.ExitCode != 0)
                 {
                     failedDownload(songPath);
                     statusText.text = "Failed to extract the audio from the song";
@@ -218,6 +236,16 @@ public class SongController : MonoBehaviour
                 spleeter(songPath);
             });
         };
+        extractAudioProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                lastCmdMessage = e.Data;
+                runErrorMessages.Add(e.Data);
+            }
+        };
+        extractAudioProcess.Start();
+        extractAudioProcess.BeginErrorReadLine();
 
     }
 
@@ -233,12 +261,10 @@ public class SongController : MonoBehaviour
             CreateNoWindow = true,
             Arguments = cmdline,
             FileName = "cmd",
-            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false
         };
-
-        System.Diagnostics.Process spleeterProcess = System.Diagnostics.Process.Start(startInfo);
-        spleeterProcess.EnableRaisingEvents = true;
+        spleeterProcess = new System.Diagnostics.Process { StartInfo = startInfo, EnableRaisingEvents = true };
         spleeterProcess.Exited += (sender, e) =>
         {
             actions.Enqueue(() =>
@@ -255,6 +281,17 @@ public class SongController : MonoBehaviour
                 createNotes(songPath);
             });
         };
+        spleeterProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                lastCmdMessage = e.Data;
+                runErrorMessages.Add(e.Data);
+            }
+        };
+
+        spleeterProcess.Start();
+        spleeterProcess.BeginErrorReadLine();
     }
 
     // Create the notes file
@@ -269,12 +306,11 @@ public class SongController : MonoBehaviour
             CreateNoWindow = true,
             Arguments = cmdline,
             FileName = "cmd",
-            RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false
         };
 
-        System.Diagnostics.Process noteGenerationProcess = System.Diagnostics.Process.Start(startInfo);
-        noteGenerationProcess.EnableRaisingEvents = true;
+        noteGenerationProcess = new System.Diagnostics.Process { StartInfo = startInfo, EnableRaisingEvents = true };
         noteGenerationProcess.Exited += (sender, e) =>
         {
             actions.Enqueue(() =>
@@ -295,6 +331,16 @@ public class SongController : MonoBehaviour
                 populateSongOptions();
             });
         };
+        noteGenerationProcess.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                lastCmdMessage = e.Data;
+                runErrorMessages.Add(e.Data);
+            }
+        };
+        noteGenerationProcess.Start();
+        noteGenerationProcess.BeginErrorReadLine();
     }
 
     private void downloadThumbnail(string songPath, string videoId)
@@ -312,7 +358,9 @@ public class SongController : MonoBehaviour
         DirectoryInfo d = new DirectoryInfo(songPath);
         foreach(var fileInfo in d.GetFiles("*.mp4"))
         {
-            return fileInfo.Name.Split('.')[0];
+            string filePath = fileInfo.FullName;
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return fileName;
         }
 
         return null;
@@ -327,7 +375,35 @@ public class SongController : MonoBehaviour
 
     private void failedDownload(string songPath)
     {
-        Directory.Delete(songPath);
+        try
+        {
+            if(File.Exists(songPath + ".meta"))
+            {
+                File.Delete(songPath + ".meta");
+            }
+            Directory.Delete(songPath, true);
+        }catch(System.Exception e)
+        {
+            Debug.Log(e.Message);
+        }
+
+        downloadingSong = false;
+        progressBar.SetPercentage(0.0f);
+
+        writeErrorLog();
+
+    }
+
+    private void writeErrorLog()
+    {
+        string logPath = Application.dataPath + "/log.txt";
+        using (StreamWriter w = File.AppendText(logPath))
+        {
+            foreach(var line in runErrorMessages)
+            {
+                w.WriteLine(line);
+            }
+        }
     }
 
     // Create the songs folder if it doesn't exist

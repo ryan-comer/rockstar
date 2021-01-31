@@ -7,7 +7,7 @@ public class Note : MonoBehaviour, Assets.scripts.IPoolable
 
     public float distancePerSecond = 1.0f;
 
-    private bool falling = true;
+    public bool IsFalling { get; set; }
 
     // Start is called before the first frame update
     void Start()
@@ -18,7 +18,7 @@ public class Note : MonoBehaviour, Assets.scripts.IPoolable
     // Update is called 50 times per second
     void FixedUpdate()
     {
-        if (falling)
+        if (IsFalling)
         {
             fall();
         }
@@ -34,11 +34,11 @@ public class Note : MonoBehaviour, Assets.scripts.IPoolable
 
     public void LeavePool()
     {
-        falling = true; 
+        IsFalling = true; 
     }
 
     public void ReturnToPool()
     {
-        falling = false;
+        IsFalling = false;
     }
 }

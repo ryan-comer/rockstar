@@ -6,6 +6,8 @@ using UnityEngine;
 public class SongNotesController : MonoBehaviour
 {
 
+    public static SongNotesController Instance;
+
     public Transform[] noteRails;
     public Transform noteStart, noteTrigger;
     public float triggerRadius = 5.0f;
@@ -25,6 +27,7 @@ public class SongNotesController : MonoBehaviour
     private int currentNoteIndex = 0;
 
     private ObjectPool objectPool;
+    private HashSet<Note> activeNotes = new HashSet<Note>();
 
     // Used to figure out the relative pitch between notes
     private string[] noteOrder = new string[] {"C0", "C#0", "D0", "D#0", "E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0", 
@@ -43,6 +46,11 @@ public class SongNotesController : MonoBehaviour
         {
             return randomNotesCoroutineObject != null;
         }
+    }
+
+    private void Awake()
+    {
+        Instance = this;
     }
 
     public void Init(AudioClip audioClip, string notesFile)
@@ -81,6 +89,18 @@ public class SongNotesController : MonoBehaviour
         checkInput();
     }
 
+    public void UpdateVolume(float newVolume)
+    {
+        newVolume = Mathf.Clamp(newVolume, 0.0f, 1.0f);
+        audioSource.volume = newVolume;
+    }
+
+    public void RemoveNote(Note note)
+    {
+        activeNotes.Remove(note);
+        Destroy(note.gameObject);
+    }
+
     // See if you need to create any notes
     private void createNotes()
     {
@@ -100,7 +120,7 @@ public class SongNotesController : MonoBehaviour
     private int getRailNumber(Tuple<int, int> note)
     {
         int notePosition = note.Item2;
-        int railNumber = System.Array.IndexOf(possibleNoteIndices, notePosition) % 8;
+        int railNumber = System.Array.IndexOf(possibleNoteIndices, notePosition) % 4;
 
         return railNumber;
     }
@@ -126,6 +146,24 @@ public class SongNotesController : MonoBehaviour
     {
         audioSource.clip = songClip;
         audioSource.Play();
+    }
+
+    public void PauseSong()
+    {
+        audioSource.Pause();
+        foreach(Note note in activeNotes)
+        {
+            note.IsFalling = false;
+        }
+    }
+
+    public void ResumeSong()
+    {
+        audioSource.Play();
+        foreach(Note note in activeNotes)
+        {
+            note.IsFalling = true;
+        }
     }
 
     public void StartRandomNotes()
@@ -184,7 +222,9 @@ public class SongNotesController : MonoBehaviour
 
         newNote.GetComponent<MeshRenderer>().material = newMaterial;
 
-        Destroy(newNote.gameObject, 15.0f);
+        newNote.IsFalling = true;
+
+        activeNotes.Add(newNote);
 
         //StartCoroutine(returnNoteCoroutine(newObject));
     }
@@ -203,11 +243,22 @@ public class SongNotesController : MonoBehaviour
 
     private void addPointsForNotes(Note[] notesHit)
     {
+        if(notesHit.Length == 0)
+        {
+            return;
+        }
+
+        // Find lowest note
+        Note lowestNote = notesHit[0];
         foreach(var note in notesHit)
         {
-            //objectPool.ReturnToPool(0, note.gameObject);
-            Destroy(note.gameObject);
+            if(note.transform.position.y < lowestNote.transform.position.y)
+            {
+                lowestNote = note;
+            }
         }
+
+        Destroy(lowestNote.gameObject);
     }
 
     private Note[] checkNotesHit()
