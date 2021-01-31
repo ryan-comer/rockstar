@@ -100,6 +100,8 @@ public class SongController : MonoBehaviour
             newOption.transform.SetParent(songOptionsParent);
             newOption.SongId = songId;
 
+            newOption.GetComponent<RectTransform>().localScale = Vector3.one;
+
             activeSongOptions.Add(newOption);
         }
     }
