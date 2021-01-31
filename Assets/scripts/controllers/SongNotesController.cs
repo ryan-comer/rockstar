@@ -258,6 +258,7 @@ public class SongNotesController : MonoBehaviour
             }
         }
 
+        GameController.Instance.NoteHit();
         Destroy(lowestNote.gameObject);
     }
 

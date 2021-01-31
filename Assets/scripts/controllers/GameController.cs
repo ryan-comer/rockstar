@@ -1,21 +1,32 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Video;
 using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
+    public static GameController Instance;
 
+    public int scorePerNote = 100;
     public SongNotesController songNotesController;
     public GameObject videoTarget;
     public FrameManager frameManager;
-    public UnityEngine.UI.Slider volumeSlider;
+    public Slider volumeSlider;
+    public Text scoreText;
 
     private RenderTexture videoRenderTexture;
     private VideoPlayer videoPlayer;
 
     private bool isPaused = false;
+
+    private int currentScore = 0;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +53,12 @@ public class GameController : MonoBehaviour
         {
             togglePause();
         }
+    }
+
+    public void NoteHit()
+    {
+        currentScore += scorePerNote;
+        scoreText.text = "Score: " + currentScore.ToString();
     }
 
     public void ToMainMenu()
