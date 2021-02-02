@@ -110,15 +110,17 @@ public class GameController : MonoBehaviour
         switch (SongController.Instance.GetSelectedSpeedOption().gameSpeed)
         {
             case (GameSpeed.SLOW):
-                songNotesController.noteTimeToHit = 4;
+                songNotesController.noteTimeToHit = 3.0f;
                 break;
             case (GameSpeed.MEDIUM):
-                songNotesController.noteTimeToHit = 3;
+                songNotesController.noteTimeToHit = 2.5f;
                 break;
             case (GameSpeed.FAST):
-                songNotesController.noteTimeToHit = 2;
+                songNotesController.noteTimeToHit = 1.5f;
                 break;
         }
+
+        songNotesController.numNoteColums = SongController.Instance.GetNumberOfKeys();
 
         // Init audio
         AudioClip audioClip = createAudioClip(songId, songPath + "/" + songName + ".wav");

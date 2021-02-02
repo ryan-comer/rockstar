@@ -75,3 +75,7 @@ pretrained_models.meta
 Assets/log.txt
 Assets/log.txt.meta
 Assets/songs/
+Assets/plugins/
+Assets/plugins.meta
+Assets/config.json
+Assets/config.json.meta

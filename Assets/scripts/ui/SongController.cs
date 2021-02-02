@@ -21,6 +21,9 @@ public class SongController : MonoBehaviour
     public GameSpeedOption[] gameSpeedOptions;
     private GameSpeedOption selectedSpeedOption;
 
+    public Slider numberOfKeysSlider;
+    private int numberOfKeys;
+
     public string songsFolderName = "songs";
 
     public Text statusText;
@@ -57,6 +60,7 @@ public class SongController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        initConfig();
         initializeSongsFolder();
 
         pythonExe = Application.streamingAssetsPath + "/" + "python/runtime/python.exe";
@@ -82,12 +86,21 @@ public class SongController : MonoBehaviour
         checkForActions();
     }
 
+    private void initConfig()
+    {
+        string numKeys = Assets.scripts.utility.ConfigUtilities.ReadConfig(Application.dataPath + "/" + "config.json", "numKeys");
+        numberOfKeys = int.Parse(numKeys);
+        numberOfKeysSlider.value = numberOfKeys;
+    }
+
     private void subscribeToEvents()
     {
         foreach(var option in gameSpeedOptions)
         {
             option.OnClicked += gameSpeedOptionSelected;
-        }        
+        }
+
+        numberOfKeysSlider.onValueChanged.AddListener(numberOfKeysValueChanged);
     }
 
     private void gameSpeedOptionSelected(GameSpeedOption selectedOption)
@@ -101,6 +114,12 @@ public class SongController : MonoBehaviour
         }
 
         selectedSpeedOption = selectedOption;
+    }
+
+    private void numberOfKeysValueChanged(float newValue)
+    {
+        numberOfKeys = (int)newValue;
+        Assets.scripts.utility.ConfigUtilities.WriteConfig(Application.dataPath + "/" + "config.json", "numKeys", newValue.ToString());
     }
 
     private void clearSongOptions()
@@ -140,6 +159,11 @@ public class SongController : MonoBehaviour
     public GameSpeedOption GetSelectedSpeedOption()
     {
         return selectedSpeedOption;
+    }
+
+    public int GetNumberOfKeys()
+    {
+        return numberOfKeys;
     }
 
     public void UpdateSelectedSongOption(SongOption newOption)
