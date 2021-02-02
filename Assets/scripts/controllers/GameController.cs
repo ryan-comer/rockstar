@@ -107,6 +107,19 @@ public class GameController : MonoBehaviour
 
         string notesPath = songPath + "/" + "notes.txt";
 
+        switch (SongController.Instance.GetSelectedSpeedOption().gameSpeed)
+        {
+            case (GameSpeed.SLOW):
+                songNotesController.noteTimeToHit = 4;
+                break;
+            case (GameSpeed.MEDIUM):
+                songNotesController.noteTimeToHit = 3;
+                break;
+            case (GameSpeed.FAST):
+                songNotesController.noteTimeToHit = 2;
+                break;
+        }
+
         // Init audio
         AudioClip audioClip = createAudioClip(songId, songPath + "/" + songName + ".wav");
         songNotesController.Init(audioClip, notesPath);

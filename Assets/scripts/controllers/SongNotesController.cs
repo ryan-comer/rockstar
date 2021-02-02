@@ -13,6 +13,7 @@ public class SongNotesController : MonoBehaviour
     public float triggerRadius = 5.0f;
     public Note note_p;
     public float noteTimeToHit = 5.0f;  // Time for the note to hit the trigger area (in seconds)
+    public int numNoteColums = 4;
 
     public Color[] noteColors;
 
@@ -120,7 +121,7 @@ public class SongNotesController : MonoBehaviour
     private int getRailNumber(Tuple<int, int> note)
     {
         int notePosition = note.Item2;
-        int railNumber = System.Array.IndexOf(possibleNoteIndices, notePosition) % 4;
+        int railNumber = System.Array.IndexOf(possibleNoteIndices, notePosition) % numNoteColums;
 
         return railNumber;
     }
@@ -130,6 +131,13 @@ public class SongNotesController : MonoBehaviour
     {
         float secondsInSong = note.Item1 / 1000.0f;
         timeUntilNote = secondsInSong - audioSource.time;
+
+        if(secondsInSong < noteTimeToHit)
+        {
+            // Too early in the song - skip this note
+            currentNoteIndex += 1;
+            return false;
+        }
 
         if(secondsInSong - audioSource.time <= noteTimeToHit)
         {

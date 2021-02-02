@@ -18,6 +18,9 @@ public class SongController : MonoBehaviour
     private List<SongOption> activeSongOptions = new List<SongOption>();
     private SongOption selectedSongOption;
 
+    public GameSpeedOption[] gameSpeedOptions;
+    private GameSpeedOption selectedSpeedOption;
+
     public string songsFolderName = "songs";
 
     public Text statusText;
@@ -69,12 +72,35 @@ public class SongController : MonoBehaviour
 
         clearSongOptions();
         populateSongOptions();
+
+        subscribeToEvents();
     }
 
     // Update is called once per frame
     void Update()
     {
         checkForActions();
+    }
+
+    private void subscribeToEvents()
+    {
+        foreach(var option in gameSpeedOptions)
+        {
+            option.OnClicked += gameSpeedOptionSelected;
+        }        
+    }
+
+    private void gameSpeedOptionSelected(GameSpeedOption selectedOption)
+    {
+        foreach(var option in gameSpeedOptions)
+        {
+            if(option != selectedOption)
+            {
+                option.UnselectOption();
+            }
+        }
+
+        selectedSpeedOption = selectedOption;
     }
 
     private void clearSongOptions()
@@ -111,6 +137,11 @@ public class SongController : MonoBehaviour
         return selectedSongOption;
     }
 
+    public GameSpeedOption GetSelectedSpeedOption()
+    {
+        return selectedSpeedOption;
+    }
+
     public void UpdateSelectedSongOption(SongOption newOption)
     {
         if (selectedSongOption != null && selectedSongOption != newOption)
@@ -132,7 +163,7 @@ public class SongController : MonoBehaviour
 
     public void PlaySelectedSong()
     {
-        if(selectedSongOption == null)
+        if(selectedSongOption == null || selectedSpeedOption == null)
         {
             return;
         }
