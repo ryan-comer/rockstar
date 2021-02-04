@@ -21,6 +21,11 @@ namespace Assets.scripts.utility
             using (var configFile = new StreamReader(File.OpenRead(configPath)))
             {
                 string configText = configFile.ReadToEnd();
+                if (string.IsNullOrEmpty(configText))
+                {
+                    return null;
+                }
+
                 var jObject = JObject.Parse(configText);
                 if (!jObject.ContainsKey(configKey))
                 {
@@ -30,6 +35,7 @@ namespace Assets.scripts.utility
                 {
                     return jObject[configKey].ToString();
                 }
+                
             }
         }
 
@@ -43,11 +49,20 @@ namespace Assets.scripts.utility
                 oldJson = configFile.ReadToEnd();
             }
 
-            var jObject = JObject.Parse(oldJson);
+            JObject jObject;
+            if (string.IsNullOrEmpty(oldJson))
+            {
+                jObject = new JObject();
+            }
+            else
+            {
+                jObject = JObject.Parse(oldJson);
+            }
+
             jObject[configKey] = configValue;
             string newJson = jObject.ToString();
 
-            using (var configFile = new StreamWriter(File.OpenWrite(configPath)))
+            using (var configFile = new StreamWriter(configPath, false))
             {
                 configFile.Write(newJson);
             }
@@ -58,7 +73,6 @@ namespace Assets.scripts.utility
             if (!File.Exists(path))
             {
                 var sw = File.AppendText(path);
-                sw.Write("{\n}");
                 sw.Close();
             }
         }

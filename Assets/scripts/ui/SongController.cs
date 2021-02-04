@@ -69,7 +69,7 @@ public class SongController : MonoBehaviour
         ffmpegExe = Application.streamingAssetsPath + "/" + "python/ffmpeg/ffmpeg.exe";
         spleeterExe = Application.streamingAssetsPath + "/" + "python/spleeter/bin/spleeter.exe";
         noteGenerationPy = Application.streamingAssetsPath + "/" + "python/note_generation/__main__.py";
-        songsPath = Application.dataPath + "/" + songsFolderName;
+        songsPath = Application.persistentDataPath + "/" + songsFolderName;
 
         progressBar.SetPercentage(0.0f);
         progressBar.gameObject.SetActive(false);
@@ -88,9 +88,17 @@ public class SongController : MonoBehaviour
 
     private void initConfig()
     {
-        string numKeys = Assets.scripts.utility.ConfigUtilities.ReadConfig(Application.dataPath + "/" + "config.json", "numKeys");
-        numberOfKeys = int.Parse(numKeys);
-        numberOfKeysSlider.value = numberOfKeys;
+        string numKeys = Assets.scripts.utility.ConfigUtilities.ReadConfig(Application.persistentDataPath + "/" + "config.json", "numKeys");
+        if(numKeys != null)
+        {
+            numberOfKeys = int.Parse(numKeys);
+            numberOfKeysSlider.value = numberOfKeys;
+        }
+        else
+        {
+            numberOfKeys = 4;
+            numberOfKeysSlider.value = 4;
+        }
     }
 
     private void subscribeToEvents()
@@ -119,7 +127,7 @@ public class SongController : MonoBehaviour
     private void numberOfKeysValueChanged(float newValue)
     {
         numberOfKeys = (int)newValue;
-        Assets.scripts.utility.ConfigUtilities.WriteConfig(Application.dataPath + "/" + "config.json", "numKeys", newValue.ToString());
+        Assets.scripts.utility.ConfigUtilities.WriteConfig(Application.persistentDataPath + "/" + "config.json", "numKeys", newValue.ToString());
     }
 
     private void clearSongOptions()
@@ -453,7 +461,7 @@ public class SongController : MonoBehaviour
 
     private void writeErrorLog()
     {
-        string logPath = Application.dataPath + "/log.txt";
+        string logPath = Application.persistentDataPath + "/log.txt";
         using (StreamWriter w = File.AppendText(logPath))
         {
             foreach(var line in runErrorMessages)
@@ -466,7 +474,7 @@ public class SongController : MonoBehaviour
     // Create the songs folder if it doesn't exist
     private void initializeSongsFolder()
     {
-        string directoryPath = Application.dataPath + "/" + songsFolderName;
+        string directoryPath = Application.persistentDataPath + "/" + songsFolderName;
         if(!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);

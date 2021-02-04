@@ -31,11 +31,12 @@ public class GameController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        initConfig();
+
         videoRenderTexture = videoTarget.GetComponent<MeshRenderer>().material.mainTexture as RenderTexture;
         videoPlayer = videoTarget.GetComponent<VideoPlayer>();
 
         initializeSong();
-        volumeSlider.value = 0.2f;
 
         videoPlayer.Play();
         songNotesController.StartSong();
@@ -45,6 +46,23 @@ public class GameController : MonoBehaviour
     void Update()
     {
         checkInput();
+    }
+
+    private void initConfig()
+    {
+        string savedVolume = Assets.scripts.utility.ConfigUtilities.ReadConfig(Application.persistentDataPath + "/" + "config.json", "volume");
+        if(savedVolume != null)
+        {
+            float savedVolumef = float.Parse(savedVolume);
+
+            volumeSlider.value = savedVolumef;
+            songNotesController.UpdateVolume(savedVolumef);
+        }
+        else
+        {
+            volumeSlider.value = 0.2f;
+            songNotesController.UpdateVolume(0.2f);
+        }
     }
 
     private void checkInput()
@@ -69,6 +87,7 @@ public class GameController : MonoBehaviour
     public void UpdateVolume(float newVolume)
     {
         songNotesController.UpdateVolume(newVolume);
+        Assets.scripts.utility.ConfigUtilities.WriteConfig(Application.persistentDataPath + "/" + "config.json", "volume", newVolume.ToString());
     }
 
     private void togglePause()
@@ -102,7 +121,7 @@ public class GameController : MonoBehaviour
     private void initializeSong()
     {
         string songId = SongController.Instance.GetSelectedSongOption().SongId;
-        string songPath = Application.dataPath + "/" + "songs" + "/" + songId;
+        string songPath = Application.persistentDataPath + "/" + "songs" + "/" + songId;
         string songName = SongController.Instance.findSongName(songPath);
 
         string notesPath = songPath + "/" + "notes.txt";
