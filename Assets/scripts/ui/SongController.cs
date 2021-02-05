@@ -32,7 +32,7 @@ public class SongController : MonoBehaviour
 
     private string pythonExe;
     private string youtubeDlPy;
-    private string spleeterExe;
+    private string spleeterPath;
     private string noteGenerationPy;
     private string ffmpegPath;
     private string ffmpegExe;
@@ -57,17 +57,27 @@ public class SongController : MonoBehaviour
         DontDestroyOnLoad(this.gameObject);
     }
 
+    private void OnEnable()
+    {
+        Application.logMessageReceived += (logString, stackTrace, logType) =>
+        {
+            Assets.scripts.utility.LogUtilities.Log(logString);
+        };
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         initConfig();
         initializeSongsFolder();
 
+        Assets.scripts.utility.LogUtilities.SetLogPath(Application.persistentDataPath + "/" + "log.txt");
+
         pythonExe = Application.streamingAssetsPath + "/" + "python/runtime/python.exe";
         youtubeDlPy = Application.streamingAssetsPath + "/" + "python/youtube_dl/__main__.py";
         ffmpegPath = Application.streamingAssetsPath + "/" + "python/ffmpeg";
         ffmpegExe = Application.streamingAssetsPath + "/" + "python/ffmpeg/ffmpeg.exe";
-        spleeterExe = Application.streamingAssetsPath + "/" + "python/spleeter/bin/spleeter.exe";
+        spleeterPath = Application.streamingAssetsPath + "/" + "python/spleeter/";
         noteGenerationPy = Application.streamingAssetsPath + "/" + "python/note_generation/__main__.py";
         songsPath = Application.persistentDataPath + "/" + songsFolderName;
 
@@ -247,7 +257,7 @@ public class SongController : MonoBehaviour
                 if(downloadProcess.ExitCode != 0)
                 {
                     failedDownload(songPath);
-                    statusText.text = "Failed to download song";
+                    statusText.text = "Failed to download song with code: " + downloadProcess.ExitCode;
                     return;
                 }
 
@@ -292,7 +302,7 @@ public class SongController : MonoBehaviour
                 if(extractAudioProcess.ExitCode != 0)
                 {
                     failedDownload(songPath);
-                    statusText.text = "Failed to extract the audio from the song";
+                    statusText.text = "Failed to extract the audio from the song wit code: " + extractAudioProcess.ExitCode;
                     return;
                 }
 
@@ -319,7 +329,7 @@ public class SongController : MonoBehaviour
     {
         string songName = findSongName(songPath);
         string inputFile = songPath + "/" + songName + ".wav";
-        string cmdline = string.Format("/c \"set \"PATH=%PATH%;{0}\" && \"{1}\" separate -p spleeter:2stems -o \"{2}\" \"{3}\"\"", new object[] { ffmpegPath, spleeterExe, songPath, inputFile});
+        string cmdline = string.Format("/c \"set \"PATH=%PATH%;{0}\" && cd \"{1}\" && \"{2}\" -m spleeter separate -p spleeter:2stems -o \"{3}\" \"{4}\"\"", new object[] { ffmpegPath, spleeterPath, pythonExe, songPath, inputFile});
 
         System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
         {
@@ -337,7 +347,7 @@ public class SongController : MonoBehaviour
                 if(spleeterProcess.ExitCode != 0)
                 {
                     failedDownload(songPath);
-                    statusText.text = "Failed to extract the vocals from the song";
+                    statusText.text = "Failed to extract the vocals from the song with code: " + spleeterProcess.ExitCode;
                     return;
                 }
 
@@ -364,7 +374,7 @@ public class SongController : MonoBehaviour
     {
         string songName = findSongName(songPath);
         string vocalsWav = songPath + "/" + songName + "/vocals.wav";
-        string cmdline = string.Format("/c \"set \"PATH=%PATH%;{0}\" && \"{1}\" \"{2}\" \"{3}\"\"", new object[] { ffmpegPath, noteGenerationPy, vocalsWav, songPath });
+        string cmdline = string.Format("/c \"set \"PATH=%PATH%;{0}\" && \"{1}\" \"{2}\" \"{3}\" \"{4}\"\"", new object[] { ffmpegPath, pythonExe, noteGenerationPy, vocalsWav, songPath });
 
         System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
         {
@@ -383,7 +393,7 @@ public class SongController : MonoBehaviour
                 if(noteGenerationProcess.ExitCode != 0)
                 {
                     failedDownload(songPath);
-                    statusText.text = "Failed to create the notes for the song";
+                    statusText.text = "Failed to create the notes for the song with code: " + noteGenerationProcess.ExitCode;
                     return;
                 }
                 statusText.text = "Done!";
@@ -461,13 +471,9 @@ public class SongController : MonoBehaviour
 
     private void writeErrorLog()
     {
-        string logPath = Application.persistentDataPath + "/log.txt";
-        using (StreamWriter w = File.AppendText(logPath))
+        foreach(var line in runErrorMessages)
         {
-            foreach(var line in runErrorMessages)
-            {
-                w.WriteLine(line);
-            }
+            Assets.scripts.utility.LogUtilities.Log(line);
         }
     }
 

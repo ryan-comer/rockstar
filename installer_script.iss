@@ -35,15 +35,17 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked  
+
+[Dirs]
+Name: "{app}\Rockstar_Data\"; Permissions: everyone-modify
 
 [Files]
 Source: "C:\Users\Ryan\src\rockstar\build\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Ryan\src\rockstar\build\UnityCrashHandler32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Ryan\src\rockstar\build\UnityPlayer.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Ryan\src\rockstar\build\MonoBleedingEdge\*"; DestDir: "{app}\MonoBleedingEdge"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\Ryan\src\rockstar\build\pretrained_models\*"; DestDir: "{app}\pretrained_models"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\Ryan\src\rockstar\build\Rockstar_Data\*"; DestDir: "{app}\Rockstar_data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\Ryan\src\rockstar\build\Rockstar_Data\*"; DestDir: "{app}\Rockstar_Data"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
